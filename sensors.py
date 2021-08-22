@@ -14,6 +14,8 @@ class Sensors(object):
     INVALID_ALTITUDE = -400
     INVALID_GAS = -500
     INVALID_PM25 = -600
+    PM25_24h_MAX_READING = 28800
+    PM25_READING_COUNT = 3
 
     def __init__(self, temperature_offset=-1, sea_level_pressure=1013.25):
         self._i2c = None
@@ -28,6 +30,8 @@ class Sensors(object):
         self._humidity_stats = RunningStats()
         self._pressure_stats = RunningStats()
         self._environmental_pm25_stats = RunningStats()
+        self._pm25_24h_readings = []
+        self.init_pm25_readings()
         self.init()
 
     @property
@@ -154,6 +158,22 @@ class Sensors(object):
     def environmental_pm25_stats(self):
         return self._environmental_pm25_stats
 
+    @property
+    def pm25_readings_mean(self):
+        total = 0
+        for r in self._pm25_readings:
+            total += r
+        return total/len(self._pm25_readings)
+
+    @property
+    def pm25_24h_readings_mean(self):
+        if not self._pm25_24h_readings:
+            return 0
+        total = 0
+        for r in self._pm25_24h_readings:
+            total += r
+        return total/len(self._pm25_24h_readings)
+
     def init(self):
         self.init_i2c()
         self.init_bme680()
@@ -178,6 +198,15 @@ class Sensors(object):
         except Exception:
             print("BME680 sensor not present")
 
+    def init_pm25_readings(self):
+        self._pm25_reading_index = 0
+        self._pm25_readings = [0] * Sensors.PM25_READING_COUNT
+
+    def add_pm25_24h_reading(self, data):
+        if len(self._pm25_24h_readings) == Sensors.PM25_24h_MAX_READING:
+            self._pm25_24h_readings = self._pm25_24h_readings[1:]
+        self._pm25_24h_readings.append(data)
+
     def update(self, force=False):
         if force or (time.monotonic() - self._last_update >= self._update_frequency):
             try:
@@ -185,7 +214,12 @@ class Sensors(object):
                 self._temperature_stats.add(self.temperature)
                 self._humidity_stats.add(self.humidity)
                 self._pressure_stats.add(self.pressure)
-                self._environmental_pm25_stats.add(self.environmental_pm25)
+                self._pm25_readings[self._pm25_reading_index] = self.environmental_pm25
+                self._pm25_reading_index +=1
+                if self._pm25_reading_index == len(self._pm25_readings):
+                    self._environmental_pm25_stats.add(self.pm25_readings_mean)
+                    self.add_pm25_24h_reading(self.pm25_readings_mean)
+                    self.init_pm25_readings()
                 self._last_update = time.monotonic()
             except Exception as e:
                 print(e)

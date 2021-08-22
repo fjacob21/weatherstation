@@ -40,28 +40,29 @@ class BigScreen(NormalScreen):
     def calculate_pm25_aqi(self):
         aqi_val = 0
         aqi_cat = ""
+        pm25_24h_mean = self._sensors.pm25_24h_readings_mean
         # Check sensor reading using EPA breakpoint (Clow-Chigh)
-        if 0.0 <= self._sensors.environmental_pm25_stats.mean <= 12.0:
+        if 0.0 <= pm25_24h_mean <= 12.0:
             # AQI calculation using EPA breakpoints (Ilow-IHigh)
-            aqi_val = map_range(int(self._sensors.environmental_pm25_stats.mean), 0, 12, 0, 50)
+            aqi_val = map_range(int(pm25_24h_mean), 0, 12, 0, 50)
             aqi_cat = "Good"
-        elif 12.1 <= self._sensors.environmental_pm25_stats.mean <= 35.4:
-            aqi_val = map_range(int(self._sensors.environmental_pm25_stats.mean), 12, 35, 51, 100)
+        elif 12.1 <= pm25_24h_mean <= 35.4:
+            aqi_val = map_range(int(pm25_24h_mean), 12, 35, 51, 100)
             aqi_cat = "Moderate"
-        elif 35.5 <= self._sensors.environmental_pm25_stats.mean <= 55.4:
-            aqi_val = map_range(int(self._sensors.environmental_pm25_stats.mean), 36, 55, 101, 150)
+        elif 35.5 <= pm25_24h_mean <= 55.4:
+            aqi_val = map_range(int(pm25_24h_mean), 36, 55, 101, 150)
             aqi_cat = "Unhealthy for Sensitive Groups"
-        elif 55.5 <= self._sensors.environmental_pm25_stats.mean <= 150.4:
-            aqi_val = map_range(int(self._sensors.environmental_pm25_stats.mean), 56, 150, 151, 200)
+        elif 55.5 <= pm25_24h_mean <= 150.4:
+            aqi_val = map_range(int(pm25_24h_mean), 56, 150, 151, 200)
             aqi_cat = "Unhealthy"
-        elif 150.5 <= self._sensors.environmental_pm25_stats.mean <= 250.4:
-            aqi_val = map_range(int(self._sensors.environmental_pm25_stats.mean), 151, 250, 201, 300)
+        elif 150.5 <= pm25_24h_mean <= 250.4:
+            aqi_val = map_range(int(pm25_24h_mean), 151, 250, 201, 300)
             aqi_cat = "Very Unhealthy"
-        elif 250.5 <= self._sensors.environmental_pm25_stats.mean <= 350.4:
-            aqi_val = map_range(int(self._sensors.environmental_pm25_stats.mean), 251, 350, 301, 400)
+        elif 250.5 <= pm25_24h_mean <= 350.4:
+            aqi_val = map_range(int(pm25_24h_mean), 251, 350, 301, 400)
             aqi_cat = "Hazardous"
-        elif 350.5 <= self._sensors.environmental_pm25_stats.mean <= 500.4:
-            aqi_val = map_range(int(self._sensors.environmental_pm25_stats.mean), 351, 500, 401, 500)
+        elif 350.5 <= pm25_24h_mean <= 500.4:
+            aqi_val = map_range(int(pm25_24h_mean), 351, 500, 401, 500)
             aqi_cat = "Hazardous"
         return aqi_val, aqi_cat
 
